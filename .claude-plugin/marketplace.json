@@ -1,0 +1,17 @@
+{
+  "name": "yosuyuwo",
+  "owner": {
+    "name": "Yosua"
+  },
+  "metadata": {
+    "description": "Agent skills (Claude Code, Codex, Cursor, Gemini CLI and more): brand DNA, design-system hub with approval gate, critic loop."
+  },
+  "plugins": [
+    {
+      "name": "design-gate",
+      "source": "./",
+      "description": "Brand DNA, a reviewable design-system hub with an approval gate and voice layer, and a budgeted builder-plus-critics design loop.",
+      "version": "0.2.0"
+    }
+  ]
+}
