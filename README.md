@@ -99,18 +99,24 @@ build features from approved parts (enforced by the AGENTS.md gate)
 
 ## What it writes into a project
 
+Everything goes in one folder, plus the gate rule in `AGENTS.md` (agents only read it at the root):
+
 ```
-design-dna/<slug>/        PROMPT.md, dna.json, tools/check.py, reference/, example/
-design-system/
-  manifest.json           status and approvals
-  approaches.md
-  voice.md
-  copy/                   glossary, string inventory, lint_copy.py, proof
-  snapshots/              approved looks
-  README.md               for reviewers
-.design-loop/<run>/       brief, bar, ref/, renders/, progress   (gitignore renders/)
-AGENTS.md                 design gate rule
+design-gate/
+  README.md            how to review, for colleagues (hub URL, review order, what approved means)
+  .gitignore           loops/*/renders/, system/snapshots/*/pending-*
+  dna/<slug>/          brand DNA: PROMPT.md, dna.json, tools/check.py, reference/, example/
+  system/
+    manifest.json      every item with its status and approval record
+    approaches.md      the approaches log
+    voice.md           the brand voice (a foundation, approved like colour)
+    copy/              copy-system outputs: glossary, string inventory, linter, proof
+    snapshots/         approved renders, one folder per item, the "approved look"
+  loops/<run>/         design-loop runs: brief, bar, ref/, renders/, progress
+AGENTS.md              (repo root) the design gate rule, read by every agent
 ```
+
+The hub's page code goes in your app's routes (e.g. `src/app/design/`). Renderer cache: `~/.cache/design-gate` (outside the project).
 
 ## Cost
 

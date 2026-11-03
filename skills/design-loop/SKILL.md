@@ -7,10 +7,10 @@ description: Builds a piece against a real-world reference, then runs gated fres
 
 Four phases: interview, preflight, teardown, loop. Do not skip ahead. Do not write product code during phases 1 to 3.
 
-All loop state lives in `.design-loop/<run-name>/` at the repo root:
+All loop state lives in `design-gate/loops/<run-name>/` (the project's shared `design-gate/` folder):
 
 ```
-.design-loop/<run-name>/
+design-gate/loops/<run-name>/
   brief.md        # goal, pieces, budget (Phase 1)
   bar.md          # mechanisms from the reference (Phase 3)
   ref/            # reference renders, captured once
@@ -18,7 +18,7 @@ All loop state lives in `.design-loop/<run-name>/` at the repo root:
   progress.md     # live status
 ```
 
-Suggest adding `.design-loop/*/renders/` to `.gitignore`.
+If `design-gate/.gitignore` does not already list `loops/*/renders/`, add it.
 
 ## Running on any agent
 
@@ -37,7 +37,7 @@ Ask exactly these four, together, then stop and wait.
 
 1. What are you building, and how long or how big? Which files or routes in this repo does it touch?
 2. Name something that already does this brilliantly. A specific URL, file or video I can open. If nothing comes to mind, say skip.
-3. Any files I should work from? Design system, brand DNA (`design-dna/<slug>/`), script, existing draft. Paths please. If `design-dna/` exists in the repo, list what is there and ask which one applies.
+3. Any files I should work from? Design system, brand DNA (`design-gate/dna/<slug>/`), script, existing draft. Paths please. If `design-gate/dna/` exists in the repo, list what is there and ask which one applies.
 4. Budget: `lean`, `standard` (default) or `max`?
 
 If the reference is vague ("Apple's website", "good SaaS design"), push once for the specific page or section. A vague bar is the number one reason this method fails: the critic invents a comparison and approves everything on round one.
@@ -74,7 +74,7 @@ A check, not a question. Run it before any work and report in one block.
   No render means no craft critic.
 - **Generation tools.** Name any the goal needs (image, video, voice) and confirm they are available. Note that paid generation re-runs on every rebuild of that piece.
 - **Inputs.** Confirm the files from question 3 exist. If there is no design system file, say the system critic goes blind and offer to draft one from the existing code first.
-- **Design hub.** If `design-system/manifest.json` exists, it is the design system: read it and `design-system/approaches.md`. List any draft or in-review items this goal would use and say they are not agreed yet. Ask whether to proceed (results may change after review) or approve them first via `/design-hub`.
+- **Design hub.** If `design-gate/system/manifest.json` exists, it is the design system: read it and `design-gate/system/approaches.md`. List any draft or in-review items this goal would use and say they are not agreed yet. Ask whether to proceed (results may change after review) or approve them first via `/design-hub`.
 
 Print: what is working, what is missing, **which critic goes blind**, and the plan:
 
@@ -128,7 +128,7 @@ Every line must be something a critic can check by looking. Tag each line `[hard
 
 **If a brand DNA applies:** the brand wins over the reference. Drop any reference mechanism that conflicts with the DNA's bans, palette coverage or type ratio, and say which ones you dropped. Then append a `## Brand` section to `bar.md` with the DNA's weird move and its bans, all `[hard]`. The reference supplies craft; the DNA supplies identity.
 
-**If `design-system/approaches.md` exists:** append every `[hard]` rule from approaches that apply to this goal under `## Approaches` in `bar.md`. Approaches win over the reference the same way the DNA does.
+**If `design-gate/system/approaches.md` exists:** append every `[hard]` rule from approaches that apply to this goal under `## Approaches` in `bar.md`. Approaches win over the reference the same way the DNA does.
 
 Show `bar.md` to the user and wait for approval or edits before continuing.
 
@@ -138,12 +138,12 @@ Split the goal into pieces, up to the budget's looped-piece count. State which a
 
 For each looped piece, each round:
 
-1. **Builder** — fresh context (see Running on any agent). Its prompt contains only: the piece's target files, `brief.md`, `bar.md`, the design system path, the brand DNA's `PROMPT.md` if one applies (never `dna.json`), the list of approved component ids from `design-system/manifest.json` if it exists (build only from those; report anything missing instead of inventing one-off UI), and on revisions the single named gap. Never the critic transcripts. It edits the repo files directly and reports which files changed.
+1. **Builder** — fresh context (see Running on any agent). Its prompt contains only: the piece's target files, `brief.md`, `bar.md`, the design system path, the brand DNA's `PROMPT.md` if one applies (never `dna.json`), the list of approved component ids from `design-gate/system/manifest.json` if it exists (build only from those; report anything missing instead of inventing one-off UI), and on revisions the single named gap. Never the critic transcripts. It edits the repo files directly and reports which files changed.
 2. **Render** — run the render script for the piece (use a selector to crop to the piece where possible). Save to `renders/<piece>-r<N>-<view>.png`.
-3. **Copy lint** — if `design-system/copy/lint_copy.py` exists, run it on the piece's strings (otherwise copy-system's linter, if the skill is installed). Any fail is an automatic brief FAIL with the hit named as the gap; skip the critics this round (saves runs).
+3. **Copy lint** — if `design-gate/system/copy/lint_copy.py` exists, run it on the piece's strings (otherwise copy-system's linter, if the skill is installed). Any fail is an automatic brief FAIL with the hit named as the gap; skip the critics this round (saves runs).
 4. **Critics** — each in fresh context (see Running on any agent), at the budget's tier. Run in order and **stop at the first fail**:
-   - **Brief critic**: gets `brief.md`, `design-system/voice.md` if it exists, and our renders. Does it do the thing, and does the copy sound like the voice? Ignore visual aesthetics.
-   - **System critic**: gets the design system file and our renders. Objective adherence: tokens, spacing, type scale, components. If `design-system/snapshots/*/approved-*.png` exist for the components in view, give the critic those too: components must match their approved look. If a brand DNA applies, first run its `tools/check.py` on the render; any script FAIL is an automatic system FAIL with that test named as the gap, and the critic agent is skipped (saves a run).
+   - **Brief critic**: gets `brief.md`, `design-gate/system/voice.md` if it exists, and our renders. Does it do the thing, and does the copy sound like the voice? Ignore visual aesthetics.
+   - **System critic**: gets the design system file and our renders. Objective adherence: tokens, spacing, type scale, components. If `design-gate/system/snapshots/*/approved-*.png` exist for the components in view, give the critic those too: components must match their approved look. If a brand DNA applies, first run its `tools/check.py` on the render; any script FAIL is an automatic system FAIL with that test named as the gap, and the critic agent is skipped (saves a run).
    - **Craft critic**: gets `bar.md`, our renders and `ref/` renders, copied to neutral names (`A.png`, `B.png`, order randomised) so it does not know which is ours. Asks: which is better, the single biggest gap in the weaker one, and is that gap `major` or `minor`.
 
 Each critic must reply in exactly this format, nothing else:

@@ -7,7 +7,7 @@ description: Codifies one design into a reusable, testable style spec (dna.json,
 
 You are a design forensics analyst. Your job is not to praise a design, describe it, or make something like it. Your job is to CODIFY it: reduce it to the smallest set of rules that will reproduce its identity on completely different content, across any medium. Treat the design as evidence, not as a brief.
 
-Output lives in the repo at `design-dna/<slug>/`. design-loop reads it.
+Output lives in the repo at `design-gate/dna/<slug>/` (the project's shared `design-gate/` folder). design-hub and design-loop read it.
 
 ## Modes
 
@@ -36,7 +36,7 @@ Ask these together, then stop and wait.
 3. Purpose: brand identity, a post template, or a reference to borrow from?
 4. For adapt: the source DNA path, and the brand facts to apply (palette, name, audience, voice). Ask the user what their own weird move should be, or offer three options and let them pick. Do not decide it for them.
 
-Capture the reference once into `design-dna/<slug>/reference/` (for a URL, screenshot it at the medium's native size with the shared renderer below; copy files as is). Never re-fetch it later.
+Capture the reference once into `design-gate/dna/<slug>/reference/` (for a URL, screenshot it at the medium's native size with the shared renderer below; copy files as is). Never re-fetch it later.
 
 ## Rendering
 
@@ -139,7 +139,7 @@ Not tests: "feels premium", "looks clean". If two people could disagree, it is n
 ### 6. Emit the skill folder
 
 ```
-design-dna/<slug>/
+design-gate/dna/<slug>/
   PROMPT.md        the ≤2KB payload. This is what goes into a context window.
   dna.json         the full record. NEVER pasted into a prompt.
   reference/       the original, kept forever
@@ -172,7 +172,7 @@ List every inferred value and every rule you are under 70% confident in. These d
 
 ## Adapt mode
 
-Input: a source DNA folder and the user's brand facts. Output: a new `design-dna/<brand-slug>/`.
+Input: a source DNA folder and the user's brand facts. Output: a new `design-gate/dna/<brand-slug>/`.
 
 1. **Keep the structure**: ratios, coverage percentages, signatures, archetypes, space, bans that are about structure.
 2. **Replace the identity**:
@@ -183,11 +183,11 @@ Input: a source DNA folder and the user's brand facts. Output: a new `design-dna
 3. **Remove anything that would read as a copy**: any signature that is recognisably the source's own trademark move. Replace it with a ban or one of the user's own moves.
 4. Run steps 4 to 7 on the adapted DNA, rebuilding one archetype with the user's real content (one pass, two at most).
 5. Record `meta.adapted_from` with the source slug.
-6. If the project uses `/design-hub`, offer to seed `design-system/approaches.md` with the weird move and the strongest signatures, each written as an approach (statement, why, checkable rules). Do not write it without a yes.
+6. If the project uses `/design-hub`, offer to seed `design-gate/system/approaches.md` with the weird move and the strongest signatures, each written as an approach (statement, why, checkable rules). Do not write it without a yes.
 
 ## Compose mode
 
-Input: 2 to 4 DNA folders (run extract on each reference first) and the user's brand facts. Output: a new `design-dna/<brand-slug>/`.
+Input: 2 to 4 DNA folders (run extract on each reference first) and the user's brand facts. Output: a new `design-gate/dna/<brand-slug>/`.
 
 1. **Assign decisions to sources.** Make a table: decision (type pairing, colour coverage, grid/rhythm, imagery treatment, motion, voice register, layout archetypes) → which source DNA it comes from. **No source supplies more than two decisions.** Show the table to the user and wait.
 2. **Name the difference.** Write one sentence saying what makes the result unlike all sources. Store it as `soul.unlike`. If you cannot write it, the composition is an average; go back to step 1.
@@ -199,7 +199,7 @@ Input: 2 to 4 DNA folders (run extract on each reference first) and the user's b
 
 ## Voice handoff
 
-The `voice` key is identity, not hygiene. In adapt and compose modes, write it for the user's audience and languages: register, address term (for Indonesian: Anda or kamu), sentence length, headline shape, terms kept in another language on purpose, banned words in every shipped language. If the project uses `/design-hub`, offer to seed `design-system/voice.md` from it. Copy hygiene (AI tells, em dashes, surface rules) belongs to the `copy-system` skill, not here.
+The `voice` key is identity, not hygiene. In adapt and compose modes, write it for the user's audience and languages: register, address term (for Indonesian: Anda or kamu), sentence length, headline shape, terms kept in another language on purpose, banned words in every shipped language. If the project uses `/design-hub`, offer to seed `design-gate/system/voice.md` from it. Copy hygiene (AI tells, em dashes, surface rules) belongs to the `copy-system` skill, not here.
 
 ## Rules for you
 

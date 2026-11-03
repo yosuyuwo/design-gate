@@ -1,6 +1,6 @@
 {
   "name": "design-gate",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Brand DNA, a reviewable design-system hub with an approval gate and voice layer, and a budgeted builder-plus-critics design loop.",
   "author": { "name": "Yosua" },
   "license": "MIT",

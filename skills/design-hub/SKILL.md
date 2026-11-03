@@ -23,16 +23,28 @@ The user may name one (as a slash command or in plain words, depending on the ag
 
 ## Source of truth
 
-Everything lives in `design-system/` at the repo root. The hub renders from it; nothing about status lives only in the UI.
+All design-gate state lives in one `design-gate/` folder at the repo root, shared with the design-dna and design-loop skills. The hub renders from `design-gate/system/`; nothing about status lives only in the UI. The hub's page code lives in the app (e.g. `src/app/design/`), because the framework needs it there.
 
 ```
-design-system/
-  README.md          how to review, for colleagues (plain language, links to the hub URL)
-  manifest.json      every item with its status and approval record
-  approaches.md      the approaches log
-  voice.md           the brand voice (a foundation, approved like colour)
-  copy/              copy-system outputs: glossary, string inventory, linter, proof (see Voice)
-  snapshots/         approved renders, one folder per item, used as the "approved look"
+design-gate/
+  README.md            how to review, for colleagues (hub URL, review order, what approved means)
+  .gitignore           loops/*/renders/, system/snapshots/*/pending-*
+  dna/<slug>/          brand DNA: PROMPT.md, dna.json, tools/check.py, reference/, example/
+  system/
+    manifest.json      every item with its status and approval record
+    approaches.md      the approaches log
+    voice.md           the brand voice (a foundation, approved like colour)
+    copy/              copy-system outputs: glossary, string inventory, linter, proof
+    snapshots/         approved renders, one folder per item, the "approved look"
+  loops/<run>/         design-loop runs: brief, bar, ref/, renders/, progress
+AGENTS.md              (repo root) the design gate rule, read by every agent
+```
+
+Create `design-gate/.gitignore` during setup with:
+
+```
+loops/*/renders/
+system/snapshots/*/pending-*
 ```
 
 `manifest.json` shape:
@@ -67,7 +79,7 @@ Statuses: `draft` → `in-review` → `approved` (or `changes-requested`). Any e
 Report in one block, then continue unless something blocks:
 - Framework and router (Next.js app/pages router, Vite, Remix, Astro...), styling (Tailwind, CSS vars, CSS-in-JS), component folder.
 - Existing Storybook? Existing tokens (tailwind config, CSS variables, theme file)?
-- `design-dna/` present? Which slug applies?
+- `design-gate/dna/` present? Which slug applies?
 - New project (little or no UI yet) or existing (UI already in use)?
 
 ### 2. Choose the UI library
@@ -88,7 +100,7 @@ Record the choice in `manifest.json` as `"library": { "name": "shadcn", "path": 
 
 Default: **in-app route** at `/design`. It uses the app's real fonts, providers, tokens and data shapes, ships on every preview deployment colleagues already open, and needs no second build.
 
-Use **Storybook** instead when: the project already has it, components are shared across several apps, or the app is not a web app with routes. Same `design-system/` folder either way; only the rendering surface changes.
+Use **Storybook** instead when: the project already has it, components are shared across several apps, or the app is not a web app with routes. Same `design-gate/system/` folder either way; only the rendering surface changes.
 
 State which you picked and why in one line. Do not ask unless both are equally plausible.
 
@@ -127,7 +139,7 @@ Storybook kind: same content as stories. Foundations and approaches as MDX docs 
 
 ### 6. Seed content
 
-- **New project with a DNA:** derive tokens from `design-dna/<slug>/dna.json` (palette roles with coverage, type ratio and steps, space percentages) and its `system_handoff`. Seed approaches.md from the DNA's weird move and signatures. Build only a minimal base set: button, input, card, dialog, toolbar, plus one specimen.
+- **New project with a DNA:** derive tokens from `design-gate/dna/<slug>/dna.json` (palette roles with coverage, type ratio and steps, space percentages) and its `system_handoff`. Seed approaches.md from the DNA's weird move and signatures. Build only a minimal base set: button, input, card, dialog, toolbar, plus one specimen.
 - **New project without a DNA:** suggest running `/design-dna` first. If the user declines, build foundations from their stated palette and type and mark everything draft.
 - **Existing project:** run `audit` (below) instead of inventing.
 
@@ -137,18 +149,18 @@ Append to the project's `AGENTS.md` (create if missing). AGENTS.md is the cross-
 
 ```markdown
 ## Design gate
-- Design system source of truth: design-system/manifest.json. Hub: /design (needs NEXT_PUBLIC_DESIGN_HUB=1).
+- Design system source of truth: design-gate/system/manifest.json. Hub: /design (needs NEXT_PUBLIC_DESIGN_HUB=1).
 - Build feature UI only from items with status "approved". If a needed item is draft or missing, stop and say so; offer to add it to the hub instead of inventing one-off UI.
 - Editing an approved item's source sets it to "in-review" in manifest.json.
-- Follow design-system/approaches.md and design-system/voice.md. Use design-system/copy/glossary.md terms only.
-- Write or change any user-facing string with the copy-system skill, constrained by voice.md, then run design-system/copy/lint_copy.py. No em dashes, no AI tells, no brand-banned words.
+- Follow design-gate/system/approaches.md and design-gate/system/voice.md. Use design-gate/system/copy/glossary.md terms only.
+- Write or change any user-facing string with the copy-system skill, constrained by voice.md, then run design-gate/system/copy/lint_copy.py. No em dashes, no AI tells, no brand-banned words.
 ```
 
 This is what enforces the gate in every future session, with or without this skill loaded.
 
 Agents with their own instructions file need a pointer so they read it too. If the repo has (or the user uses) Claude Code, ensure `CLAUDE.md` contains the line `@AGENTS.md`; for Gemini CLI, the same line in `GEMINI.md`. Create those files with only that line if missing and the user uses that agent. Do not duplicate the rules into them.
 
-### 8. Write design-system/README.md
+### 8. Write design-gate/README.md
 
 For colleagues, not developers: the hub URL per environment, the review order (foundations, then components, then specimens), how to leave feedback (PR comments, or whatever the team uses: ask once), and what "approved" means.
 
@@ -170,7 +182,7 @@ copy-system's rules are the floor for every string. `voice.md` decides tone wher
 copy-system's outputs are pointed into the design system folder so the hub can render them:
 
 ```
-design-system/
+design-gate/system/
   voice.md              brand voice (this skill)
   copy/
     glossary.md         copy-system's glossary, extended per language
@@ -284,7 +296,7 @@ Use realistic content in the product's languages, never lorem ipsum. A specimen 
 
 ## approach
 
-Approaches are the decisions that make the brand recognisable and that a component library cannot express on its own. Record each one in `design-system/approaches.md`:
+Approaches are the decisions that make the brand recognisable and that a component library cannot express on its own. Record each one in `design-gate/system/approaches.md`:
 
 ```markdown
 ## Writer's window
@@ -311,21 +323,21 @@ Then add a live do/don't pair to `/design/approaches`. Rules tagged `[hard]` are
 
 ## review
 
-1. Diff `design-system/` and every item's `source` against each item's `approvedCommit`. List what changed.
+1. Diff `design-gate/system/` and every item's `source` against each item's `approvedCommit`. List what changed.
 2. Set changed items to `in-review`.
-3. Render each changed item with the shared renderer (setup: see the design-loop skill's Render script section) into `design-system/snapshots/<id>/pending-*.png`:
+3. Render each changed item with the shared renderer (setup: see the design-loop skill's Render script section) into `design-gate/system/snapshots/<id>/pending-*.png`:
    ```bash
-   node ~/.cache/design-gate/render.mjs <hubUrl><hubPath> design-system/snapshots/<id>/pending --views desktop,mobile
+   node ~/.cache/design-gate/render.mjs <hubUrl><hubPath> design-gate/system/snapshots/<id>/pending --views desktop,mobile
    ```
-4. Run copy-system on any changed strings, then `design-system/copy/lint_copy.py` on the changed items.
+4. Run copy-system on any changed strings, then `design-gate/system/copy/lint_copy.py` on the changed items.
 5. Output a review note the user can paste into the PR or send to colleagues: hub links for each changed item, its checklist, before/after snapshot paths, and the copy lint score with any hits. Keep it short.
 
 ## approve
 
 `approve <item> --by <name>`:
-1. Refuse if the item uses anything that is not approved (e.g. a specimen using a draft button), or if `design-system/copy/lint_copy.py` fails on its strings. Say what blocks it.
+1. Refuse if the item uses anything that is not approved (e.g. a specimen using a draft button), or if `design-gate/system/copy/lint_copy.py` fails on its strings. Say what blocks it.
 2. Set `status: approved`, `approvedBy`, `approvedAt` (today), `approvedCommit` (current HEAD).
-3. Move pending snapshots to `design-system/snapshots/<id>/approved-*.png` (render fresh if none).
+3. Move pending snapshots to `design-gate/system/snapshots/<id>/approved-*.png` (render fresh if none).
 4. Never approve on someone's behalf without their name. If the user approves their own work and the team has other reviewers, note it once.
 
 ## status (the gate)
