@@ -28,7 +28,6 @@ All design-gate state lives in one `design-gate/` folder at the repo root, share
 ```
 design-gate/
   README.md            how to review, for colleagues (hub URL, review order, what approved means)
-  .gitignore           loops/*/renders/, system/snapshots/*/pending-*
   dna/<slug>/          brand DNA: PROMPT.md, dna.json, tools/check.py, reference/, example/
   system/
     manifest.json      every item with its status and approval record
@@ -40,11 +39,12 @@ design-gate/
 AGENTS.md              (repo root) the design gate rule, read by every agent
 ```
 
-Create `design-gate/.gitignore` during setup with:
+During setup, ignore generated files. In the project's root `.gitignore` (create it if missing), add this block if it is not already there. Add only the missing lines; never rewrite or reorder the rest of the file, and never create a `.gitignore` inside `design-gate/`:
 
 ```
-loops/*/renders/
-system/snapshots/*/pending-*
+# design-gate
+design-gate/loops/*/renders/
+design-gate/system/snapshots/*/pending-*
 ```
 
 `manifest.json` shape:

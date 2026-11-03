@@ -18,7 +18,13 @@ design-gate/loops/<run-name>/
   progress.md     # live status
 ```
 
-If `design-gate/.gitignore` does not already list `loops/*/renders/`, add it.
+Renders are not committed. In the project's root `.gitignore` (create it if missing), add this block if it is not already there. Add only the missing lines; never rewrite or reorder the rest of the file, and never create a `.gitignore` inside `design-gate/`:
+
+```
+# design-gate
+design-gate/loops/*/renders/
+design-gate/system/snapshots/*/pending-*
+```
 
 ## Running on any agent
 

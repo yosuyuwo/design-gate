@@ -104,7 +104,6 @@ Everything goes in one folder, plus the gate rule in `AGENTS.md` (agents only re
 ```
 design-gate/
   README.md            how to review, for colleagues (hub URL, review order, what approved means)
-  .gitignore           loops/*/renders/, system/snapshots/*/pending-*
   dna/<slug>/          brand DNA: PROMPT.md, dna.json, tools/check.py, reference/, example/
   system/
     manifest.json      every item with its status and approval record
@@ -116,7 +115,7 @@ design-gate/
 AGENTS.md              (repo root) the design gate rule, read by every agent
 ```
 
-The hub's page code goes in your app's routes (e.g. `src/app/design/`). Renderer cache: `~/.cache/design-gate` (outside the project).
+The hub's page code goes in your app's routes (e.g. `src/app/design/`). Generated renders and pending snapshots are ignored via a `# design-gate` block the skills add to your root `.gitignore`. Renderer cache: `~/.cache/design-gate` (outside the project).
 
 ## Cost
 
