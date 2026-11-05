@@ -41,9 +41,9 @@ if [ -z "$DIR" ]; then
   fi
 fi
 mkdir -p "$DIR"
-for s in design-setup design-dna design-hub design-loop; do
+for s in ask-design-gate design-setup design-dna design-hub design-loop; do
   rm -rf "${DIR:?}/$s"; cp -r "$HERE/skills/$s" "$DIR/$s"
 done
 echo "Skills installed to $DIR"
 if [ "$SETUP" = 1 ]; then bash "$HERE/skills/design-loop/scripts/setup.sh"; fi
-echo "Restart your agent so it picks up design-setup, design-dna, design-hub and design-loop."
+echo "Restart your agent so it picks up ask-design-gate, design-setup, design-dna, design-hub and design-loop."

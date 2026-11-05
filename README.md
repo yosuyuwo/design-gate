@@ -4,6 +4,7 @@ Agent skills that make teams agree on a design before building it: brand DNA, an
 
 | Skill | Job |
 |---|---|
+| `ask-design-gate` | Not sure what to run next? Reads your `design-gate/` folder, says where the project is in the flow, and names the next command. Only routes, never builds. |
 | `design-setup` | Asks the project questions once, before any design work: UI library, native hub or Storybook, where component files live, how the component list is grouped. |
 | `design-dna` | Codify a style you admire into rules that can fail (`dna.json`, a 2KB `PROMPT.md`, `check.py`). Compose 2 to 4 of them into your own brand. |
 | `design-hub` | A reviewable design system inside the app: a docs-style `/design` route (or Storybook) with foundations, voice, live component controls and generated props docs, examples in real device frames, a decisions log, a code-vs-DNA ledger, and an approval gate your team signs off on. |
@@ -71,6 +72,8 @@ Agents: `claude`, `codex`, `cursor`, `gemini`, `copilot`, `opencode`, `agents` (
 - macOS, Linux or WSL
 
 ## Workflow
+
+Lost? Run `ask-design-gate`.
 
 ```
 design-setup   library, hub kind, file layout, component grouping     once per project
