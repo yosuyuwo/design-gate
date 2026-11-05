@@ -80,7 +80,7 @@ A check, not a question. Run it before any work and report in one block.
   No render means no craft critic.
 - **Generation tools.** Name any the goal needs (image, video, voice) and confirm they are available. Note that paid generation re-runs on every rebuild of that piece.
 - **Inputs.** Confirm the files from question 3 exist. If there is no design system file, say the system critic goes blind and offer to draft one from the existing code first.
-- **Design hub.** If `design-gate/system/manifest.json` exists, it is the design system: read it and `design-gate/system/approaches.md`. List any draft or in-review items this goal would use and say they are not agreed yet. Ask whether to proceed (results may change after review) or approve them first via `/design-hub`.
+- **Design hub.** If `design-gate/system/manifest.json` exists, it is the design system: read it, `design-gate/system/approaches.md` and `design-gate/system/decisions.json` (decided and provisional values are constraints; never re-decide them in a loop). List any draft or in-review items this goal would use and say they are not agreed yet. Ask whether to proceed (results may change after review) or approve them first via `/design-hub`.
 
 Print: what is working, what is missing, **which critic goes blind**, and the plan:
 
@@ -103,13 +103,17 @@ Usage:
 
 ```bash
 node ~/.cache/design-gate/render.mjs <url-or-file> <outPrefix> \
-  [--views desktop,mobile,tablet] [--size 1080x1350] [--selector "#hero"] [--frames 6 --every 250]
+  [--views desktop,mobile,tablet] [--size 1080x1350] [--selector "#hero"] [--full] \
+  [--frames 6 --every 250] [--wait 800] [--walk "aside a[href^='#']"] [--expect "[data-ready]"] [--report r.json]
 ```
 
 - Pass only the viewports the budget allows.
-- `--size` overrides views with one exact canvas (posts, slides).
+- `--size` overrides views with one exact canvas (posts, slides). `--full` takes a full-page shot.
 - `--frames` captures an animation filmstrip: `<outPrefix>-f1.png` ... `-fN.png`.
-- Local HTML files work: pass the file path.
+- It waits for `load` plus `--wait` ms. Only pass `--idle` (networkidle) for production builds: on a dev server HMR keeps the network busy and it hangs.
+- Every shot is checked for console errors, HTTP errors, horizontal overflow and the `--expect` marker; it prints a JSON report and exits 1 if any check fails. Treat a failed check as a broken render: fix it before any critic sees the image. A 200 status alone proves nothing.
+- `--walk` visits every matching hash link (e.g. the design hub's aside) and checks and shoots each section.
+- Local HTML files work: pass the file path. On Windows Git Bash, prefix with `MSYS_NO_PATHCONV=1` so `/paths` aren't rewritten.
 
 If `~/.cache/design-gate/render.mjs` does not exist, or it errors with "Cannot find module 'playwright'", run the one-time setup (ask the user first; it downloads Chromium, about 150MB):
 

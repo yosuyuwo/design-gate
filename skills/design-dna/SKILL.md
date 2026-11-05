@@ -70,7 +70,7 @@ A specification that cannot fail is not a specification. If a bad output could s
 
 ## Scope note for web and app work
 
-DNA covers identity: ratios, coverage, signatures, refusals, layouts, voice. It does not cover components, states, forms or interaction. Those belong in `design-system.md`. When the medium is web or app, add a `system_handoff` key to dna.json listing the ratios and coverage rules that design-system.md must adopt, and stop there.
+DNA covers identity: ratios, coverage, signatures, refusals, layouts, voice. It does not cover components, states, forms or interaction. Those belong in the design hub (`design-gate/system/`). When the medium is web or app, add a `system_handoff` key to dna.json listing the ratios and coverage rules the hub must adopt, and store sizes as **structured fields** (below), never prose, so the hub can test its tokens against them. Then stop.
 
 ## Extract: seven steps. Show your work at each.
 
@@ -103,7 +103,10 @@ palette       colors[]: role, hex, descriptive name ("dusty plum", never "accent
               coverage: % of canvas per role, summing to ~100
               banned: forbidden colour behaviours
 type          families[]: role, family, REQUIRED fallback, weights, licence risk
-              scale: display_to_body_ratio, steps, max_sizes_per_frame
+              scale: display_to_body_ratio, max_sizes_per_frame,
+                     base (px), ratio, steps[] (sizes on the ratio),
+                     off_ratio[]: { size, reason } for every step not on it
+                     (measure existing sizes first; they often sit on a ratio nobody named)
               treatment: tracking, leading, case, measure, numerals
 space         grid, margin_pct, gutter_pct, alignment, rhythm, negative_space,
               safe_area per platform. PERCENTAGES, so one spec drives any canvas.
@@ -117,7 +120,8 @@ voice         register, address term, sentence length, headline shape,
               languages + code-mixing rule, banned words per language
 bans[]        ≥5, absolutes
 tests[]       ≥8, see step 4; each marked script|visual
-system_handoff  web/app only: rules design-system.md must adopt
+control_sizes web/app only: small, regular, large, each { height, padding_x, text, icon } in px
+system_handoff  web/app only: rules the design hub must adopt
 inferred[]    every value not measured
 ```
 

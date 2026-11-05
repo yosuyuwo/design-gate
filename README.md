@@ -4,8 +4,9 @@ Agent skills that make teams agree on a design before building it: brand DNA, an
 
 | Skill | Job |
 |---|---|
+| `design-setup` | Asks the project questions once, before any design work: UI library, native hub or Storybook, where component files live, how the component list is grouped. |
 | `design-dna` | Codify a style you admire into rules that can fail (`dna.json`, a 2KB `PROMPT.md`, `check.py`). Compose 2 to 4 of them into your own brand. |
-| `design-hub` | A reviewable design system inside the app (`/design` route or Storybook): foundations, voice, components, specimens, approaches, with an approval gate your team signs off on. |
+| `design-hub` | A reviewable design system inside the app: a docs-style `/design` route (or Storybook) with foundations, voice, live component controls and generated props docs, examples in real device frames, a decisions log, a code-vs-DNA ledger, and an approval gate your team signs off on. |
 | `design-loop` | Build a key screen, then have fresh-context critics judge it blind against a reference until it wins. Budgeted, gated, capped. |
 
 Optional companions, used when installed: `copy-system` (copy hygiene), `illustration-graphics-system` (imagery).
@@ -72,50 +73,60 @@ Agents: `claude`, `codex`, `cursor`, `gemini`, `copilot`, `opencode`, `agents` (
 ## Workflow
 
 ```
-design-dna  (extract x2-3, then compose)      once per brand
+design-setup   library, hub kind, file layout, component grouping     once per project
      │
-design-hub setup → foundations + voice → components → specimens
-     │                 review / approve at each layer
-design-loop on 2-3 key specimens only
+design-dna     extract x2-3, then compose                              once per brand
+     │
+design-hub     setup → foundations + voice → components → examples
+     │         decisions asked once, shown with real fonts; mismatches go in the ledger;
+     │         review / approve at each layer
+design-loop    on 2-3 key examples only
      │
 build features from approved parts (enforced by the AGENTS.md gate)
 ```
 
+Nothing blocks on an unanswered question: the skills use their recommendation, mark it `provisional`, and keep going. Provisional decisions and open ledger entries block approval, not the build.
+
 ### New project
 
-1. `design-dna`: extract 2 to 3 references, then compose them with your palette and audience. Pick your own weird move.
-2. `design-hub setup`: choose the UI library (shadcn recommended for brand-heavy work); the hub is built from the DNA and the design gate is written to `AGENTS.md`.
-3. Foundations, voice and glossary: `review`, send the note to colleagues, `approve --by <name>`.
-4. Components, then specimens. Loop only the key specimens with `design-loop`.
-5. Build features. Sessions refuse to invent UI that is not in the approved system.
+1. `design-setup`: answer four questions (or say "you pick").
+2. `design-dna`: extract 2 to 3 references, then compose them with your palette and audience.
+3. `design-hub setup`: builds the hub from the DNA, creates base components with every size and state (buttons, fields, pickers, containers, skeleton), shows each open decision (type ratio, control heights, corners...) as a live comparison, asks once, and writes the checks and the AGENTS.md gate.
+4. Foundations, voice and glossary: `review`, send the note to colleagues, `approve --by <name>`.
+5. Components, then examples. Loop only the key examples with `design-loop`.
+6. Build features. Sessions refuse to invent UI that is not in the approved system.
 
 ### Existing project
 
-1. `design-dna` as above, from your current brand plus references.
-2. `design-hub setup`: detects the library, audits components and copy (keep / merge / replace table plus a baseline lint score), loads everything into the hub as draft. Nothing is refactored until you confirm.
-3. Record what makes the product recognisable: `design-hub approach "<name>"`.
-4. Fix and approve item by item. Copy is rewritten per item, never the whole app at once.
-5. Loop the screens that matter most, then build.
+1. `design-setup`: detects your library and file layout and recommends keeping them.
+2. `design-dna` as above, from your current brand plus references.
+3. `design-hub setup` runs `audit`: asks once whether the DNA wins over the code, checks the DNA for conflicts with itself, measures your type scale and control sizes, flags missing props and mismatches into the ledger, and loads everything into the hub as draft. Nothing is refactored until you confirm.
+4. Record what makes the product recognisable: `design-hub approach "<name>"`.
+5. Fix and approve item by item; every ledger entry gets fixed or a named exception.
+6. Loop the screens that matter most, then build.
 
 ## What it writes into a project
 
-Everything goes in one folder, plus the gate rule in `AGENTS.md` (agents only read it at the root):
+Everything goes in one folder, plus the gate and file-layout rules in `AGENTS.md` (agents only read it at the root):
 
 ```
 design-gate/
-  README.md            how to review, for colleagues (hub URL, review order, what approved means)
+  README.md            how to review, for colleagues
   dna/<slug>/          brand DNA: PROMPT.md, dna.json, tools/check.py, reference/, example/
   system/
-    manifest.json      every item with its status and approval record
-    approaches.md      the approaches log
-    voice.md           the brand voice (a foundation, approved like colour)
-    copy/              copy-system outputs: glossary, string inventory, linter, proof
-    snapshots/         approved renders, one folder per item, the "approved look"
-  loops/<run>/         design-loop runs: brief, bar, ref/, renders/, progress
-AGENTS.md              (repo root) the design gate rule, read by every agent
+    manifest.json      every item with its status, group and approval record
+    decisions.json     every system decision, decided or provisional, and where it came from
+    disconnects.json   the ledger: code-vs-DNA mismatches and gaps, open / fixed / exception
+    approaches.md
+    voice.md
+    copy/              glossary, string inventory, lint_copy.py, proof
+    checks/            generated checks, if the project has no test runner
+    snapshots/         approved looks
+  loops/<run>/         design-loop runs
+AGENTS.md              design gate and file layout rules
 ```
 
-The hub's page code goes in your app's routes (e.g. `src/app/design/`). Generated renders and pending snapshots are ignored via a `# design-gate` block the skills add to your root `.gitignore`. Renderer cache: `~/.cache/design-gate` (outside the project).
+The hub's page code goes in your app's routes (e.g. `src/app/(hub)/design/`). Generated renders and pending snapshots are ignored via a `# design-gate` block the skills add to your root `.gitignore`. Renderer cache: `~/.cache/design-gate` (outside the project).
 
 ## Cost
 
