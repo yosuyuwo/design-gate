@@ -1,6 +1,6 @@
 ---
 name: design-dna
-description: Codifies one design into a reusable, testable style spec (dna.json, a 2KB PROMPT.md, check.py), or adapts an extracted DNA into the user's own brand. Use when the user says "/design-dna", "extract the DNA", "codify this style", "make a brand DNA", or "make a post template style from this".
+description: Codifies one design into a reusable, testable style spec (dna.json, a 2KB PROMPT.md, check.py), composes or adapts extracted DNAs into the user's own brand, or syncs W3C design tokens and Figma variables into it. Use when the user says "/design-dna", "extract the DNA", "codify this style", "make a brand DNA", "make a post template style from this", or "sync tokens from Figma".
 ---
 
 # Design DNA
@@ -14,6 +14,7 @@ Output lives in the repo at `design-gate/dna/<slug>/` (the project's shared `des
 - **extract**: one reference → a DNA that reproduces it. Default.
 - **adapt**: an existing DNA + the user's brand → the user's own DNA. Use this to make a borrowed style theirs.
 - **template**: extract, but the medium is fixed to a post format (e.g. 1080x1350 carousel) and the archetypes are the template's slide types. Use for product templates that a generator will follow.
+- **sync**: a W3C Design Tokens (DTCG) file or Figma variables → the structured fields of dna.json (palette, type, sizes, radius, spacing, elevation, motion). For teams whose source of truth is Figma or a tokens file. Read `references/token-sync.md` and follow it; steps 1 to 7 below don't apply.
 - **compose**: 2 to 4 extracted DNAs + the user's brand → one new DNA that is unlike any of them. The recommended way to build a brand identity: adapting a single source tends to produce a clone with different words on it.
 
 ## Running on any agent

@@ -24,6 +24,7 @@ Renders are not committed. In the project's root `.gitignore` (create it if miss
 # design-gate
 design-gate/loops/*/renders/
 design-gate/system/snapshots/*/pending-*
+design-gate/system/snapshots/*/diff-*
 ```
 
 ## Running on any agent
@@ -153,7 +154,7 @@ For each looped piece, each round:
 3. **Copy lint** — if `design-gate/system/copy/lint_copy.py` exists, run it on the piece's strings (otherwise copy-system's linter, if the skill is installed). Any fail is an automatic brief FAIL with the hit named as the gap; skip the critics this round (saves runs).
 4. **Critics** — each in fresh context (see Running on any agent), at the budget's tier. Run in order and **stop at the first fail**:
    - **Brief critic**: gets `brief.md`, `design-gate/system/voice.md` if it exists, and our renders. Does it do the thing, and does the copy sound like the voice? Ignore visual aesthetics.
-   - **System critic**: gets the design system file and our renders. Objective adherence: tokens, spacing, type scale, components. If `design-gate/system/snapshots/*/approved-*.png` exist for the components in view, give the critic those too: components must match their approved look. If a brand DNA applies, first run its `tools/check.py` on the render; any script FAIL is an automatic system FAIL with that test named as the gap, and the critic agent is skipped (saves a run).
+   - **System critic**: gets the design system file and our renders. Objective adherence: tokens, spacing, type scale, components, and layout breaks a DOM check misses (clipped or overlapping text, z-index clipping, elements escaping their container). If `design-gate/system/snapshots/*/approved-*.png` exist for the components in view, give the critic those too: components must match their approved look. If a brand DNA applies, first run its `tools/check.py` on the render; any script FAIL is an automatic system FAIL with that test named as the gap, and the critic agent is skipped (saves a run).
    - **Craft critic**: gets `bar.md`, our renders and `ref/` renders, copied to neutral names (`A.png`, `B.png`, order randomised) so it does not know which is ours. Asks: which is better, the single biggest gap in the weaker one, and is that gap `major` or `minor`.
 
 Each critic must reply in exactly this format, nothing else:

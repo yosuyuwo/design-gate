@@ -18,6 +18,8 @@ Check, quietly, and report in one short block:
 | `design-gate/dna/*/` | a DNA exists? Extracted only, or composed/adapted into the brand (`meta.composed_from` / `meta.adapted_from`)? |
 | `design-gate/system/manifest.json` | hub set up? Counts per layer and status |
 | `design-gate/system/disconnects.json` | open ledger entries |
+| `.github/workflows/design-gate.yml` | the CI gate is installed |
+| `design-gate/dna/*/dna.json` `meta.token_source` | tokens synced from Figma or a tokens file, and when |
 | `design-gate/loops/*/progress.md` | a loop in progress, paused at its round cap? |
 | `AGENTS.md` | the design gate rule is installed |
 
@@ -44,6 +46,10 @@ Then say the single next step, with its command. If the user asked something spe
 | "Pilot users are confused" | Not a loop problem. Fix the flow from their feedback directly, then add the fixed screen as an example in the hub |
 | "We need social post or slide templates" | `design-dna template`, one per template style |
 | "I want to change an approved component" | Edit it, then `design-hub review`: it goes back to in-review automatically |
+| "Our designers own the tokens in Figma" | `design-dna sync` (DTCG file, Figma MCP, or the Enterprise-only Variables API) |
+| "The ledger has lots of open entries" | `design-hub fix --dry-run`, then `fix` the mechanical ones |
+| "People merge drift by hand / from other editors" | `design-hub ci`: the pull request gate |
+| "Did my change break other screens?" | `design-hub review`: visual diff against the approved looks |
 | "Which library / Storybook / folder layout?" | `design-setup` (or `design-hub decide` if already set) |
 | "What's blocking us?" | `design-hub status` |
 
@@ -52,6 +58,7 @@ Then say the single next step, with its command. If the user asked something spe
 - **Don't loop components.** design-loop is the expensive one; components are agreed through review.
 - **Don't extract a DNA from your own bland UI.** You'll codify the blandness. Extract references you admire, then compose.
 - **Don't run design-setup again** to change one answer: use `design-hub decide <id> <option>`.
+- **Don't put `audit` or `fix` in CI.** They need a model and give different answers on re-runs; CI runs the deterministic checks only.
 - **Don't approve your own work** if the team has other reviewers. The skill will let you, and say so once.
 - **Small fixes** (a spacing tweak, one label) don't need any of these: edit, then `design-hub review`.
 

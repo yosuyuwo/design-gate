@@ -1,0 +1,131 @@
+# design-gate: pull request checks.
+# Installed by `design-hub ci`. Edit the env block, not the steps.
+#
+# Gate job (always): manifest, ledger, decisions and layer order (gate.mjs), the copy linter,
+#   and your project's own design checks (token drift vs dna.json, file layout, docs coverage).
+# Visual job (opt-in): builds and starts the app, renders the hub, and diffs it against the
+#   approved snapshots. Enable with the repository variable DESIGN_GATE_VISUAL=1.
+#
+# Mode: "block" fails the check (make it required in branch protection to block merges);
+#       "warn" reports in the job summary but passes.
+# Sign-off: exceptions are made in design-gate/system/disconnects.json. Protect that folder with
+#   CODEOWNERS so a design reviewer must approve any PR that changes it.
+
+name: design-gate
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DESIGN_GATE_MODE: block              # block | warn
+  NODE_VERSION: "20"
+  INSTALL_COMMAND: npm ci
+  DESIGN_CHECKS_COMMAND: ""            # e.g. "npx vitest run src/design-gate" ; empty = skip
+  BUILD_COMMAND: npm run build
+  START_COMMAND: npm run start
+  APP_URL: http://localhost:3000
+  HUB_PATH: /design
+  HUB_FLAG: NEXT_PUBLIC_DESIGN_HUB
+  VISUAL_MAX_PERCENT: "0.5"
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Gate files (manifest, ledger, decisions, layer order)
+        run: node design-gate/system/checks/gate.mjs --mode "$DESIGN_GATE_MODE" --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Copy linter
+        if: hashFiles('design-gate/system/copy/lint_copy.py') != ''
+        run: |
+          set -o pipefail
+          python3 design-gate/system/copy/lint_copy.py 2>&1 | tee lint.txt || status=$?
+          { echo "### Copy lint"; echo '```'; tail -n 40 lint.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${status:-0}" != 0 ] && [ "$DESIGN_GATE_MODE" = block ]; then exit 1; fi
+
+      - name: Project design checks
+        if: env.DESIGN_CHECKS_COMMAND != ''
+        run: |
+          $INSTALL_COMMAND
+          if ! $DESIGN_CHECKS_COMMAND; then
+            echo "### Project design checks failed" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$DESIGN_GATE_MODE" = block ]; then exit 1; fi
+            echo "::warning::design checks failed (warn mode)"
+          fi
+
+  visual:
+    if: vars.DESIGN_GATE_VISUAL == '1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install app and design-gate tools
+        run: |
+          $INSTALL_COMMAND
+          mkdir -p ~/.cache/design-gate
+          cp design-gate/system/checks/render.mjs design-gate/system/checks/diff.mjs design-gate/system/checks/package.json ~/.cache/design-gate/
+          (cd ~/.cache/design-gate && npm install --no-audit --no-fund --loglevel=error && npx playwright install --with-deps chromium)
+
+      - name: Build and start
+        env:
+          NODE_ENV: production
+        run: |
+          export "$HUB_FLAG=1"
+          $BUILD_COMMAND
+          ($START_COMMAND > server.log 2>&1 &)
+          for i in $(seq 1 60); do curl -fsS "$APP_URL$HUB_PATH" > /dev/null && break; sleep 2; done
+
+      - name: Render hub and check every section
+        run: |
+          node ~/.cache/design-gate/render.mjs "$APP_URL$HUB_PATH" design-gate/system/snapshots/_ci/hub \
+            --walk "aside a[href^='#']" --views desktop,mobile --expect "[data-hub-ready]" \
+            --report design-gate/system/snapshots/_ci/render-report.json || render_failed=1
+          echo "RENDER_FAILED=${render_failed:-0}" >> "$GITHUB_ENV"
+
+      - name: Render approved items and diff
+        run: |
+          node -e '
+            const m = require("./design-gate/system/manifest.json");
+            for (const it of m.items.filter(i => i.status === "approved" && i.hubPath)) console.log(it.id + " " + it.hubPath);
+          ' | while read -r id path; do
+            node ~/.cache/design-gate/render.mjs "$APP_URL$path" "design-gate/system/snapshots/$id/pending" --views desktop,mobile --full > /dev/null || true
+          done
+          node ~/.cache/design-gate/diff.mjs --snapshots design-gate/system/snapshots --max "$VISUAL_MAX_PERCENT" \
+            --report design-gate/system/snapshots/_ci/diff-report.json || diff_failed=1
+          node -e '
+            const r = require("./design-gate/system/snapshots/_ci/diff-report.json");
+            const rows = r.results.filter(x => x.percent > 0).map(x => `| ${x.item} | ${x.after.split("/").pop()} | ${x.percent}% |${x.over ? " over" : ""}`);
+            console.log(["### Visual diff vs approved", "", `${r.compared} compared, ${r.over} over ${r.max}%`, "", "| Item | View | Changed |", "|---|---|---|", ...rows].join("\n"));
+          ' >> "$GITHUB_STEP_SUMMARY"
+          echo "DIFF_FAILED=${diff_failed:-0}" >> "$GITHUB_ENV"
+
+      - name: Upload renders and diffs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-gate-visual
+          path: |
+            design-gate/system/snapshots/**/pending-*.png
+            design-gate/system/snapshots/**/diff-*.png
+            design-gate/system/snapshots/_ci/**
+            server.log
+
+      - name: Verdict
+        run: |
+          if [ "$RENDER_FAILED" = 1 ] || [ "$DIFF_FAILED" = 1 ]; then
+            echo "Visual changes or render problems found: see the job summary and the design-gate-visual artifact."
+            if [ "$DESIGN_GATE_MODE" = block ]; then exit 1; fi
+          fi

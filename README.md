@@ -6,8 +6,8 @@ Agent skills that make teams agree on a design before building it: brand DNA, an
 |---|---|
 | `ask-design-gate` | Not sure what to run next? Reads your `design-gate/` folder, says where the project is in the flow, and names the next command. Only routes, never builds. |
 | `design-setup` | Asks the project questions once, before any design work: UI library, native hub or Storybook, where component files live, how the component list is grouped. |
-| `design-dna` | Codify a style you admire into rules that can fail (`dna.json`, a 2KB `PROMPT.md`, `check.py`). Compose 2 to 4 of them into your own brand. |
-| `design-hub` | A reviewable design system inside the app: a docs-style `/design` route (or Storybook) with foundations, voice, live component controls and generated props docs, examples in real device frames, a decisions log, a code-vs-DNA ledger, and an approval gate your team signs off on. |
+| `design-dna` | Codify a style you admire into rules that can fail (`dna.json`, a 2KB `PROMPT.md`, `check.py`). Compose 2 to 4 of them into your own brand, or sync W3C design tokens and Figma variables into it. |
+| `design-hub` | A reviewable design system inside the app: a docs-style `/design` route (or Storybook) with foundations, voice, live component controls and generated props docs, examples in real device frames, a decisions log, a code-vs-DNA ledger with `fix`, visual diffs against approved looks, an approval gate your team signs off on, and a GitHub Actions gate for pull requests. |
 | `design-loop` | Build a key screen, then have fresh-context critics judge it blind against a reference until it wins. Budgeted, gated, capped. |
 
 Optional companions, used when installed: `copy-system` (copy hygiene), `illustration-graphics-system` (imagery).
@@ -130,6 +130,16 @@ AGENTS.md              design gate and file layout rules
 ```
 
 The hub's page code goes in your app's routes (e.g. `src/app/(hub)/design/`). Generated renders and pending snapshots are ignored via a `# design-gate` block the skills add to your root `.gitignore`. Renderer cache: `~/.cache/design-gate` (outside the project).
+
+## Pull request gate
+
+`design-hub ci` installs `.github/workflows/design-gate.yml`:
+
+- **gate** (always): manifest, ledger, decisions and layer order (`gate.mjs`, no dependencies), the copy linter, and your project's own design tests (token drift, file layout, docs coverage).
+- **visual** (opt-in, `DESIGN_GATE_VISUAL=1`): builds the app, walks every hub section for console errors and overflow, diffs approved items against their approved snapshots, and uploads the images.
+- `warn` or `block` mode. Exceptions are made in `disconnects.json`, which CODEOWNERS sends to a design reviewer.
+
+Only deterministic checks run in CI. `audit` and `fix` need a model, so they run locally.
 
 ## Cost
 

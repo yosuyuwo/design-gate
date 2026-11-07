@@ -6,8 +6,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST="${DESIGN_GATE_HOME:-$HOME/.cache/design-gate}"
 command -v node >/dev/null || { echo "Node.js 18+ is required." >&2; exit 1; }
 mkdir -p "$DEST"
-cp "$HERE/render.mjs" "$HERE/package.json" "$DEST/"
+cp "$HERE/render.mjs" "$HERE/diff.mjs" "$HERE/package.json" "$DEST/"
 cd "$DEST"
 npm install --no-audit --no-fund --loglevel=error
 npx --yes playwright install chromium
-echo "design-gate renderer ready: node $DEST/render.mjs <url-or-file> <outPrefix>"
+echo "design-gate tools ready: node $DEST/render.mjs (screenshots, checks) and node $DEST/diff.mjs (visual diff)"

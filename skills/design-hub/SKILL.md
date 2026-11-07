@@ -17,6 +17,8 @@ Detail lives in `references/`. Read a reference file when its step comes up, not
 | `references/ledger.md` | auditing an existing project, or anything about code vs DNA |
 | `references/voice.md` | setting the voice, glossary, copy linter, or the voice page |
 | `references/frameworks.md` | before starting servers, editing config, or on Next.js / Windows |
+| `references/fix.md` | running `fix` |
+| `references/ci.md` | running `ci`, or when the user asks about pull request checks |
 
 ## Commands
 
@@ -28,6 +30,8 @@ The user may name one (as a slash command or in plain words, depending on the ag
 | `audit` | Existing projects: inventory the code, fill the ledger, load everything as draft |
 | `add <item>` | Add a foundation, component, pattern or example |
 | `approach <name>` | Record a design approach (e.g. "writer's window") |
+| `fix [item or entry] [--dry-run]` | Resolve open ledger entries in code: plan first, then fix item by item, check, diff, mark fixed. Never approves |
+| `ci` | Install the GitHub Actions gate that runs the deterministic checks on pull requests |
 | `decide <id> <option> --by <name>` | Confirm or change a decision (turns `provisional` into `decided`) |
 | `review` | Prepare a review: what changed since last approval, with a checklist per item |
 | `approve <item> --by <name>` | Mark approved, snapshot it as the approved look |
@@ -60,6 +64,7 @@ In the project's root `.gitignore` (create it if missing), add this block if it 
 # design-gate
 design-gate/loops/*/renders/
 design-gate/system/snapshots/*/pending-*
+design-gate/system/snapshots/*/diff-*
 ```
 
 `manifest.json` shape:
@@ -123,13 +128,15 @@ Storybook kind: same content as stories and MDX pages (see the end of `hub-layou
 
 ### 6. Generate the checks
 
-Add to the project's test runner (or `design-gate/system/checks/`, run in CI). Fail when:
+Copy this skill's `scripts/gate.mjs` to `design-gate/system/checks/gate.mjs`. It covers the shared files with no dependencies: manifest validity, sources, groups, layer order, ledger and decisions (`node design-gate/system/checks/gate.mjs`). Then add the project-specific checks to the project's test runner (or as node scripts next to it). Together they fail when:
 - the manifest is invalid, a component has no `group`, or a `source` no longer exists,
 - an approved item has an open ledger entry or depends on a blocking `open`/`provisional` decision,
 - a ledger entry names an unknown item, or an exception has no note,
 - tokens disagree with `dna.json` (colours, type scale with ratio and reasons, control sizes),
 - a hub component has no playground or no extracted docs,
 - the file-layout rules from design-setup are broken (see design-setup's `references/file-layout.md`).
+
+Offer `ci` once the checks pass locally.
 
 ### 7. Write the project rule
 
@@ -210,6 +217,14 @@ Status: approved · Owner: Yosua · Since: 2026-11-03
 
 Add a live do/don't pair to the Approaches page. `[hard]` rules are added to every design-loop `bar.md` in this repo. The component placement rule for the chosen grouping also lives here.
 
+## fix
+
+Follow `references/fix.md`. In short: classify every open entry (token swap, value change, missing prop, needs a decision, locked, not mechanical), show the plan and wait, then per item run a fresh-context builder limited to the named entries, re-run the checks, render and diff, and mark entries `fixed` only when their check passes. Changed approved items go back to `in-review`. It never sets exceptions, never edits the DNA to pass, and never approves.
+
+## ci
+
+Follow `references/ci.md`: copy the workflow template into `.github/workflows/design-gate.yml`, generate `design-gate/system/checks/run.mjs` if the checks aren't in the test runner, set the mode (`warn` or `block`) and CODEOWNERS for `design-gate/system/`.
+
 ## review
 
 1. Diff `design-gate/system/` and every item's `source` against its `approvedCommit`, **with rename detection** (`git diff -M`). A pure move updates `source` and keeps the approval; any content change sets the item to `in-review`.
@@ -217,9 +232,15 @@ Add a live do/don't pair to the Approaches page. `[hard]` rules are added to eve
    ```bash
    node ~/.cache/design-gate/render.mjs <hubUrl><hubPath> design-gate/system/snapshots/<id>/pending --views desktop,mobile --full
    ```
-3. Run copy-system on changed strings, then `design-gate/system/copy/lint_copy.py`.
-4. Collect the item's open ledger entries and blocking decisions.
-5. Output a short review note to paste into the PR or send to colleagues: hub links, snapshots, lint score, and this checklist per item:
+3. **Visual diff** against the approved look:
+   ```bash
+   node ~/.cache/design-gate/diff.mjs --snapshots design-gate/system/snapshots --max 0.5 --report design-gate/system/snapshots/_review/diff-report.json
+   ```
+   It writes `diff-*.png` (changed pixels in red) next to each pair and reports the % changed. A change is not a failure by itself: it tells the reviewer exactly where to look. A change on an item whose source didn't change is a regression from somewhere else (a token, a shared component): name the cause.
+4. **Render QA** (layout, not taste): in fresh context at the `small` tier, give one checker the pending render and its diff image only. It answers per image `PASS` or `FAIL: <one sentence>` for layout breaks code checks miss: clipped or cut-off text, overlapping elements, z-index clipping (menus or popovers under other layers), elements outside their container, misaligned rows, broken spacing rhythm, missing images. Aesthetic judgement is out of scope here (that is the reviewer, or design-loop). A FAIL goes in the review note as a blocker.
+5. Run copy-system on changed strings, then `design-gate/system/copy/lint_copy.py`.
+6. Collect the item's open ledger entries and blocking decisions.
+7. Output a short review note to paste into the PR or send to colleagues: hub links, snapshots and diff images with % changed, render QA results, lint score, and this checklist per item:
 
 ```
 - [ ] Open ledger entries for this item: none
@@ -235,6 +256,7 @@ Add a live do/don't pair to the Approaches page. `[hard]` rules are added to eve
 - [ ] Examples checked in real frames at all three widths
 - [ ] The hub's server HTML holds only the skeleton, and it matches the real page at all three widths
 - [ ] Copy lint passes
+- [ ] Render QA: no layout breaks; every visual change in the diff is intended
 ```
 
 Plus the item's own checklist from the manifest.
@@ -242,9 +264,9 @@ Plus the item's own checklist from the manifest.
 ## approve
 
 `approve <item> --by <name>`:
-1. Refuse, saying what blocks it, if the item: uses anything not approved, has an open ledger entry, depends on an `open` or `provisional` decision that blocks approval, or fails the copy linter.
+1. Refuse, saying what blocks it, if the item: uses anything not approved, has an open ledger entry, depends on an `open` or `provisional` decision that blocks approval, fails the copy linter, or has a render QA FAIL.
 2. Set `status: approved`, `approvedBy`, `approvedAt` (today), `approvedCommit` (current HEAD).
-3. Move pending snapshots to `approved-*.png` (render fresh if none).
+3. Move pending snapshots to `approved-*.png` (render fresh if none) and delete that item's `diff-*.png`.
 4. Never approve on someone's behalf without their name. If the user approves their own work and the team has other reviewers, note it once.
 
 ## status (the gate)
@@ -252,7 +274,7 @@ Plus the item's own checklist from the manifest.
 ```
 Foundations   6/8 approved · voice in review · control sizes provisional (from shadcn)
 Decisions     9 decided · 2 provisional (type-ratio, skeleton-feel) · 0 open
-Ledger        4 open (button 2, tabs 1, input 1) · 3 exceptions · 12 fixed
+Ledger        4 open (button 2, tabs 1, input 1; 3 fixable by `fix`) · 3 exceptions · 12 fixed
 Copy lint     4/5, 2 em dashes (studio-editor)
 Components    9/14 approved · 3 in review · 2 draft (dialog, toast)
 Examples      1/4 approved
